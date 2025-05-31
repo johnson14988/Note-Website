@@ -1,11 +1,28 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
+import { useUser } from '@/hooks/useUser'
 
 export default function UploadPage() {
+    const { user, loading } = useUser()
+    const router = useRouter()
+    const pathname = usePathname()
+
+    // hooks 放最上面
     const [title, setTitle] = useState('')
     const [content, setContent] = useState('')
     const [message, setMessage] = useState('')
+
+    useEffect(() => {
+        if (!loading && !user) {
+            // 跳转到登录页并带上当前页面路径作为 redirect 参数
+            router.push(`/login?redirect=${encodeURIComponent(pathname)}`)
+        }
+    }, [user, loading, router, pathname])
+
+    if (loading) return <p>加载中...</p>
+    if (!user) return null
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -20,7 +37,7 @@ export default function UploadPage() {
             setTitle('')
             setContent('')
         } else {
-            setMessage('❌ 笔记保存失败')
+            setMessage('❌ 笔记保存失败！')
         }
     }
 
