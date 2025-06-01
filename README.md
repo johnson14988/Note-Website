@@ -7,9 +7,26 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 ![Login Page.png](public/demo%20pictures/Login%20Page.png)
 ![Edit Note Page.png](public/demo%20pictures/Edit%20Note%20Page.png)
 
-***保存的用户和笔记信息可以用Prisma Studio查看和管理***
+保存的用户和笔记信息可以用Prisma Studio查看和管理
+
+```
+> npx prisma studio
+```
 ![Prisma Studio Users.png](public/demo%20pictures/Prisma%20Studio%20Users.png)
 ![Prisma Studio Notes.png](public/demo%20pictures/Prisma%20Studio%20Notes.png)
+
+## AI辅助开发要点
+1. 技术栈选择
+   + 语言：TypeScript✅
+   + 网页：Tailwind CSS✅
+   + 前端框架：Next.js✅
+   + 数据库：PostgreSQL + Prisma ORM✅
+   + 身份与会话：bcryptjs + JWT + HttpOnly Cookie ✅
+2. 功能设计
+   + 用户注册与登录与全局用户状态管理
+   + JWT 认证及会话管理
+   + 创建\编辑\删除笔记
+   + 加密的密码与笔记存储
 
 # Next.js默认文档
 
