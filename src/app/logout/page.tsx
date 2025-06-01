@@ -8,9 +8,9 @@ export default function LogoutPage() {
 
     useEffect(() => {
         fetch('/api/logout', { method: 'POST' }).then(() => {
-            router.push('/')
+            router.push('/')  // 或 router.replace('/')，回到首页
         })
     }, [router])
 
-    return <p>正在退出登录...</p>
+    return <p style={{ padding: 20 }}>正在退出登录...</p>
 }

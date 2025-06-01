@@ -1,33 +1,54 @@
-import fs from 'fs'
-import path from 'path'
 import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'  // 你的 prisma client
 
-const notesDir = path.join(process.cwd(), 'notes')
+// 约定 slug = `${date}-${slugifiedTitle}`，这里用 title 组成的 slug，或你也可以用 id
 
 export async function GET(req: Request, { params }: { params: { slug: string } }) {
-    const filePath = path.join(notesDir, `${params.slug}.md`)
+    const { slug } = params
 
-    if (!fs.existsSync(filePath)) {
+    // 从 slug 解析出笔记标题（假设slug格式是 date-title）
+    // 如果你存储了 slug 字段，也可以直接用 slug 查询，这里用 title 举例
+    const title = slug.split('-').slice(1).join('-')
+
+    const note = await prisma.note.findFirst({
+        where: { title },
+    })
+
+    if (!note) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
 
-    const content = fs.readFileSync(filePath, 'utf-8')
-    return NextResponse.json({ content })
+    return NextResponse.json({ content: note.content, title: note.title, createdAt: note.createdAt })
 }
 
 export async function PUT(req: Request, { params }: { params: { slug: string } }) {
+    const { slug } = params
     const { content } = await req.json()
-    const filePath = path.join(notesDir, `${params.slug}.md`)
-    fs.writeFileSync(filePath, content, 'utf-8')
+    const title = slug.split('-').slice(1).join('-')
+
+    const updatedNote = await prisma.note.updateMany({
+        where: { title },
+        data: { content },
+    })
+
+    if (updatedNote.count === 0) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+
     return NextResponse.json({ message: 'Saved' })
 }
 
 export async function DELETE(_: Request, { params }: { params: { slug: string } }) {
-    const filePath = path.join(notesDir, `${params.slug}.md`)
-    if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath)
-        return NextResponse.json({ message: 'Deleted' })
-    } else {
+    const { slug } = params
+    const title = slug.split('-').slice(1).join('-')
+
+    const deletedNote = await prisma.note.deleteMany({
+        where: { title },
+    })
+
+    if (deletedNote.count === 0) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
+
+    return NextResponse.json({ message: 'Deleted' })
 }

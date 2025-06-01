@@ -9,14 +9,12 @@ export default function UploadPage() {
     const router = useRouter()
     const pathname = usePathname()
 
-    // hooks 放最上面
     const [title, setTitle] = useState('')
     const [content, setContent] = useState('')
     const [message, setMessage] = useState('')
 
     useEffect(() => {
         if (!loading && !user) {
-            // 跳转到登录页并带上当前页面路径作为 redirect 参数
             router.push(`/login?redirect=${encodeURIComponent(pathname)}`)
         }
     }, [user, loading, router, pathname])
@@ -26,10 +24,16 @@ export default function UploadPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+        setMessage('')
+
         const res = await fetch('/api/notes', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, content }),
+            body: JSON.stringify({
+                title,
+                content,
+                username: user.username, // ✅ 添加用户名
+            }),
         })
 
         if (res.ok) {
@@ -37,7 +41,8 @@ export default function UploadPage() {
             setTitle('')
             setContent('')
         } else {
-            setMessage('❌ 笔记保存失败！')
+            const data = await res.json()
+            setMessage(`❌ 笔记保存失败: ${data.error || '未知错误'}`)
         }
     }
 

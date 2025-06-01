@@ -1,22 +1,27 @@
-// components/Header.tsx
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useUser } from '@/hooks/useUser'
 
 export default function Header() {
-    const [user, setUser] = useState<string | null>(null)
-    const [loading, setLoading] = useState(true)
+    const { user, setUser, loading } = useUser()
+    const router = useRouter()
 
-    useEffect(() => {
-        fetch('/api/me')
-            .then(res => res.json())
-            .then(data => {
-                if (data.loggedIn) setUser(data.username)
-                else setUser(null)
-            })
-            .finally(() => setLoading(false))
-    }, [])
+    const handleLogout = async () => {
+        try {
+            const res = await fetch('/api/logout', { method: 'POST' })
+            if (res.ok) {
+                setUser(null)
+                router.push('/')
+            } else {
+                alert('退出登录失败')
+            }
+        } catch {
+            alert('退出登录出错')
+        }
+    }
 
     if (loading) return <div>加载中...</div>
 
@@ -26,13 +31,13 @@ export default function Header() {
             <div className="space-x-4">
                 {user ? (
                     <>
-                        <span>欢迎，{user}</span>
-                        <Link
-                            href="/logout"
+                        <span>欢迎，{user?.username}</span>
+                        <button
+                            onClick={handleLogout}
                             className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
                         >
                             退出登录
-                        </Link>
+                        </button>
                     </>
                 ) : (
                     <>

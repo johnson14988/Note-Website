@@ -1,9 +1,8 @@
-// app/page.tsx 或 pages/index.tsx
+// app/page.tsx
+'use client'
 
-import fs from 'fs'
-import path from 'path'
 import Link from 'next/link'
-import Header from '../components/Header'  // 路径根据你的目录结构调整
+import { useEffect, useState } from 'react'
 
 interface NoteMeta {
     slug: string
@@ -11,36 +10,19 @@ interface NoteMeta {
     date: string
 }
 
-function getNotesMeta(): NoteMeta[] {
-    const notesDir = path.join(process.cwd(), 'notes')
-    if (!fs.existsSync(notesDir)) return []
-
-    const files = fs.readdirSync(notesDir).filter(f => f.endsWith('.md'))
-
-    return files
-        .map(filename => {
-            const slug = filename.replace(/\.md$/, '')
-            const content = fs.readFileSync(path.join(notesDir, filename), 'utf-8')
-
-            const matchTitle = content.match(/title:\s*(.+)/)
-            const matchDate = content.match(/date:\s*(.+)/)
-
-            return {
-                slug,
-                title: matchTitle ? matchTitle[1].trim() : slug,
-                date: matchDate ? matchDate[1].trim() : '',
-            }
-        })
-        .sort((a, b) => b.date.localeCompare(a.date))
-}
-
 export default function Home() {
-    const notes = getNotesMeta()
+    const [notes, setNotes] = useState<NoteMeta[]>([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        fetch('/api/notes')  // 👈 改为从 API 获取数据
+            .then(res => res.json())
+            .then(data => setNotes(data.notes || []))
+            .finally(() => setLoading(false))
+    }, [])
 
     return (
         <main className="p-6">
-            <Header />
-
             <p>This is a Next.js Site</p>
 
             <nav className="mt-6 mb-8">
@@ -54,7 +36,9 @@ export default function Home() {
 
             <section>
                 <h2 className="text-2xl font-semibold mb-4">笔记列表</h2>
-                {notes.length === 0 ? (
+                {loading ? (
+                    <p>加载中...</p>
+                ) : notes.length === 0 ? (
                     <p>还没有笔记，快去创建一个吧！</p>
                 ) : (
                     <ul>

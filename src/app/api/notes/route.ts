@@ -1,36 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
-import slugify from 'slugify'
+import { prisma } from '@/lib/prisma'
 
 export async function POST(req: NextRequest) {
-    const { title, content } = await req.json()
+    const { title, content, username } = await req.json()
 
-    if (!title || !content) {
-        return NextResponse.json({ error: '缺少标题或内容' }, { status: 400 })
+    if (!title || !content || !username) {
+        return NextResponse.json({ error: '缺少标题、内容或用户名' }, { status: 400 })
     }
 
-    const date = new Date().toISOString().split('T')[0]
-    const slug = `${date}-${slugify(title, { lower: true, strict: true })}`
-    const filePath = path.join(process.cwd(), 'notes', `${slug}.md`)
-
-    const mdContent = `---
-title: ${title}
-date: ${date}
----
-
-${content}
-`
-
     try {
-        // 确保目录存在
-        const dirPath = path.join(process.cwd(), 'notes')
-        if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath)
+        const user = await prisma.user.findUnique({
+            where: { username },
+        })
 
-        fs.writeFileSync(filePath, mdContent)
-        return NextResponse.json({ success: true, slug })
-    } catch (err) {
-        console.error('写入失败:', err)
-        return NextResponse.json({ error: '服务器写入失败' }, { status: 500 })
+        if (!user) {
+            return NextResponse.json({ error: '用户不存在' }, { status: 404 })
+        }
+
+        const note = await prisma.note.create({
+            data: {
+                title,
+                content,
+                userId: user.id,
+            },
+        })
+
+        return NextResponse.json({ success: true, note })
+    } catch (error) {
+        console.error('写入数据库失败:', error)
+        return NextResponse.json({ error: '服务器错误' }, { status: 500 })
+    }
+}
+
+// ✅ 添加这个 GET 方法用于主页展示笔记列表
+export async function GET() {
+    try {
+        const notes = await prisma.note.findMany({
+            orderBy: { createdAt: 'desc' },
+            select: {
+                title: true,
+                createdAt: true,
+            },
+        })
+
+        const formatted = notes.map((note: { createdAt: { toISOString: () => string }; title: string }) => ({
+            slug: note.createdAt.toISOString().split('T')[0] + '-' + note.title,
+            title: note.title,
+            date: note.createdAt.toISOString().split('T')[0],
+        }))
+
+        return NextResponse.json({ notes: formatted })
+    } catch (error) {
+        console.error('获取笔记失败:', error)
+        return NextResponse.json({ error: '服务器错误' }, { status: 500 })
     }
 }
