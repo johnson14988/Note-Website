@@ -1,27 +1,37 @@
-import fs from 'fs'
-import React from "react"
-import path from 'path'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import Link from 'next/link'
 import DeleteNoteForm from '../../../components/deleteNoteForm'
+import { prisma } from '@/lib/prisma'  // 注意这里，确保引入的是 prisma 客户端
 
-export default function NotePage({ params }: { params: Promise<{ slug: string }> }) {
-    const { slug } = React.use(params)
-    const filePath = path.join(process.cwd(), 'notes', `${slug}.md`)
+interface NotePageProps {
+    params: { slug: string }
+}
 
-    if (!fs.existsSync(filePath)) {
+export default async function NotePage({ params }: NotePageProps) {
+    const { slug } = params
+    console.log('slug:', slug)
+
+    // 只取 title 部分
+    const title = slug.split('-').slice(3).join('-')
+    console.log('parsed title:', title)
+
+    // 用 prisma 只根据 title 查询笔记
+    const note = await prisma.note.findFirst({
+        where: { title },
+    })
+    console.log('note:', note)
+
+    if (!note) {
         notFound()
     }
 
-    const content = fs.readFileSync(filePath, 'utf-8')
-    const mdContent = content.replace(/^---[\s\S]*?---/, '').trim()
-
     return (
         <main style={{ padding: 20 }}>
+            <h1 className="text-3xl font-bold mb-6">{note.title}</h1>
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {mdContent}
+                {note.content}
             </ReactMarkdown>
 
             <div style={{ marginTop: 20, display: 'flex', gap: 12 }}>
