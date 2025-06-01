@@ -1,5 +1,18 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+# 非Next.js默认文档
+
+## Website Overview
+![Home Page.png](public/demo%20pictures/Home%20Page.png)
+![Login Page.png](public/demo%20pictures/Login%20Page.png)
+![Edit Note Page.png](public/demo%20pictures/Edit%20Note%20Page.png)
+
+***保存的用户和笔记信息可以用Prisma Studio查看和管理***
+![Prisma Studio Users.png](public/demo%20pictures/Prisma%20Studio%20Users.png)
+![Prisma Studio Notes.png](public/demo%20pictures/Prisma%20Studio%20Notes.png)
+
+# Next.js默认文档
+
 ## Getting Started
 
 First, run the development server:
